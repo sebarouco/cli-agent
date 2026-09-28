@@ -135,6 +135,50 @@ The CLI automatically detects system accessibility preferences:
 - Standard NO_COLOR environment variable
 - Custom color scheme preferences
 
+### Screen Reader Support
+
+The CLI provides enhanced support for screen readers to ensure accessibility for users with visual impairments.
+
+#### Screen Reader Detection
+
+The CLI automatically detects common screen readers:
+- **Environment Variables**: `PIECES_SCREEN_READER`, `SCREEN_READER`, `JAWS`, `NVDA`, `ORCA`, `VOICEOVER`, `TALKBACK`
+- **Platform Detection**: Windows registry checks for JAWS/NVDA, macOS VoiceOver status, Linux Orca process
+
+```bash
+# Manually enable screen reader mode
+export PIECES_SCREEN_READER=1
+pieces list
+```
+
+#### Screen Reader Optimizations
+
+When screen reader mode is enabled, the CLI:
+- Removes visual-only formatting (box drawing characters, decorative symbols)
+- Uses descriptive text indicators instead of Unicode symbols
+- Adds spoken-friendly prefixes (e.g., "Success:", "Error:", "Warning:")
+- Provides extra spacing for better content separation
+- Simplifies complex table/structure layouts
+
+#### Verbose Mode
+
+Verbose mode provides more descriptive output that's helpful for screen readers and users who prefer detailed information.
+
+```bash
+# Enable verbose mode
+export PIECES_VERBOSE=1
+pieces list
+```
+
+Verbose mode is automatically enabled when screen reader mode is detected.
+
+#### Screen Reader Friendly Output
+
+The CLI provides specialized output methods for screen readers:
+- **Structured Data**: Numbered lists with clear separators
+- **Progress Information**: Spoken percentages and descriptive progress
+- **List Display**: Item-by-item announcement with numbering
+
 ## Contributing
 
 ### Installation

@@ -6,6 +6,7 @@ This module provides accessibility features including:
 - Color scheme detection
 - Screen reader friendly output
 - High contrast mode support
+- Verbose/descriptive output modes
 """
 
 from pieces.accessibility.config import AccessibilityConfig

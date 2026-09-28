@@ -117,3 +117,80 @@ class TestAccessibleConsole:
         # Test basic context manager usage
         with console:
             pass  # Should not raise an error
+    
+    def test_screen_reader_formatting(self):
+        """Test screen reader specific formatting."""
+        original_screen_reader = os.environ.get('PIECES_SCREEN_READER')
+        
+        try:
+            os.environ['PIECES_SCREEN_READER'] = '1'
+            config = AccessibilityConfig()
+            console = AccessibleConsole(config=config)
+            
+            # Test that visual indicators are removed
+            result = console._format_for_screen_reader("Error: [red]Failed[/red]")
+            assert "[red]" not in result
+            assert "[/red]" not in result
+            assert "Failed" in result
+            
+            # Test that box drawing characters are removed
+            result = console._format_for_screen_reader("─ ━ │ ┃")
+            assert "─" not in result
+            assert "━" not in result
+            assert "│" not in result
+        finally:
+            if original_screen_reader is not None:
+                os.environ['PIECES_SCREEN_READER'] = original_screen_reader
+            elif 'PIECES_SCREEN_READER' in os.environ:
+                del os.environ['PIECES_SCREEN_READER']
+    
+    def test_screen_reader_structure_printing(self):
+        """Test screen reader friendly structure printing."""
+        original_screen_reader = os.environ.get('PIECES_SCREEN_READER')
+        
+        try:
+            os.environ['PIECES_SCREEN_READER'] = '1'
+            config = AccessibilityConfig()
+            console = AccessibleConsole(config=config)
+            
+            # Test that print_structure works (no assertion, just ensure it doesn't crash)
+            console.print_structure("Test Title", ["Item 1", "Item 2", "Item 3"])
+        finally:
+            if original_screen_reader is not None:
+                os.environ['PIECES_SCREEN_READER'] = original_screen_reader
+            elif 'PIECES_SCREEN_READER' in os.environ:
+                del os.environ['PIECES_SCREEN_READER']
+    
+    def test_screen_reader_progress_printing(self):
+        """Test screen reader friendly progress printing."""
+        original_screen_reader = os.environ.get('PIECES_SCREEN_READER')
+        
+        try:
+            os.environ['PIECES_SCREEN_READER'] = '1'
+            config = AccessibilityConfig()
+            console = AccessibleConsole(config=config)
+            
+            # Test that print_progress works (no assertion, just ensure it doesn't crash)
+            console.print_progress("Downloading", 5, 10)
+        finally:
+            if original_screen_reader is not None:
+                os.environ['PIECES_SCREEN_READER'] = original_screen_reader
+            elif 'PIECES_SCREEN_READER' in os.environ:
+                del os.environ['PIECES_SCREEN_READER']
+    
+    def test_screen_reader_list_printing(self):
+        """Test screen reader friendly list printing."""
+        original_screen_reader = os.environ.get('PIECES_SCREEN_READER')
+        
+        try:
+            os.environ['PIECES_SCREEN_READER'] = '1'
+            config = AccessibilityConfig()
+            console = AccessibleConsole(config=config)
+            
+            # Test that print_list works (no assertion, just ensure it doesn't crash)
+            console.print_list(["Item 1", "Item 2", "Item 3"], "Test List")
+        finally:
+            if original_screen_reader is not None:
+                os.environ['PIECES_SCREEN_READER'] = original_screen_reader
+            elif 'PIECES_SCREEN_READER' in os.environ:
+                del os.environ['PIECES_SCREEN_READER']

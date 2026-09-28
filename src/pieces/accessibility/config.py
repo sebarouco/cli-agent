@@ -5,6 +5,8 @@ Handles detection of user accessibility preferences including:
 - NO_COLOR environment variable support
 - System color scheme detection
 - High contrast mode detection
+- Screen reader mode detection
+- Verbose output mode for accessibility
 """
 
 import os
@@ -36,6 +38,8 @@ class AccessibilityConfig:
         self._color_scheme = self._detect_color_scheme()
         self._no_color = self._check_no_color()
         self._high_contrast = self._check_high_contrast()
+        self._screen_reader = self._check_screen_reader()
+        self._verbose = self._check_verbose_mode()
         
     @property
     def color_scheme(self) -> ColorScheme:
@@ -56,6 +60,16 @@ class AccessibilityConfig:
     def should_use_color(self) -> bool:
         """Determine if colors should be used based on preferences."""
         return not self._no_color
+    
+    @property
+    def screen_reader(self) -> bool:
+        """Check if screen reader mode is enabled."""
+        return self._screen_reader
+    
+    @property
+    def verbose(self) -> bool:
+        """Check if verbose mode is enabled for accessibility."""
+        return self._verbose
     
     def _detect_color_scheme(self) -> ColorScheme:
         """
@@ -116,6 +130,96 @@ class AccessibilityConfig:
                     return True
             except (OSError, ImportError):
                 pass
+        
+        return False
+    
+    def _check_screen_reader(self) -> bool:
+        """
+        Check if screen reader mode should be enabled.
+        
+        Detects screen reader through:
+        1. PIECES_SCREEN_READER environment variable
+        2. Common screen reader environment variables
+        3. Screen reader detection on different platforms
+        """
+        # Check explicit environment variable
+        if 'PIECES_SCREEN_READER' in os.environ:
+            return os.environ['PIECES_SCREEN_READER'].lower() in ('1', 'true', 'yes', 'on')
+        
+        # Check common screen reader environment variables
+        screen_reader_vars = [
+            'SCREEN_READER',           # Generic
+            'JAWS',                    # JAWS for Windows
+            'NVDA',                    # NVDA for Windows
+            'ORCA',                    # Orca for Linux
+            'VOICEOVER',               # VoiceOver for macOS
+            'TALKBACK',                # TalkBack for Android
+            'TERMINAL_SCREEN_READER'  # Terminal screen readers
+        ]
+        
+        for var in screen_reader_vars:
+            if var in os.environ:
+                return True
+        
+        # Platform-specific detection
+        if sys.platform == 'win32':
+            try:
+                import winreg
+                # Check for common screen readers in Windows registry
+                screen_readers = [
+                    r'SOFTWARE\Freedom Scientific\JAWS',
+                    r'SOFTWARE\NVDA',
+                    r'SOFTWARE\Microsoft\Windows NT\CurrentVersion\Accessibility'
+                ]
+                for sr_path in screen_readers:
+                    try:
+                        winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, sr_path)
+                        return True
+                    except OSError:
+                        continue
+            except (OSError, ImportError):
+                pass
+        elif sys.platform == 'darwin':
+            # Check for VoiceOver on macOS
+            try:
+                import subprocess
+                result = subprocess.run(
+                    ['defaults', 'read', 'com.apple.universalaccess', 'voiceOverOn'],
+                    capture_output=True, text=True, timeout=1
+                )
+                if result.stdout.strip() == '1':
+                    return True
+            except (OSError, subprocess.TimeoutExpired, FileNotFoundError):
+                pass
+        elif sys.platform.startswith('linux'):
+            # Check for Orca or other Linux screen readers
+            try:
+                import subprocess
+                # Check if Orca is running
+                result = subprocess.run(
+                    ['pgrep', '-x', 'orca'],
+                    capture_output=True, timeout=1
+                )
+                if result.returncode == 0:
+                    return True
+            except (OSError, subprocess.TimeoutExpired, FileNotFoundError):
+                pass
+        
+        return False
+    
+    def _check_verbose_mode(self) -> bool:
+        """
+        Check if verbose mode should be enabled for accessibility.
+        
+        Verbose mode provides more descriptive output that's helpful for screen readers.
+        """
+        # Check explicit environment variable
+        if 'PIECES_VERBOSE' in os.environ:
+            return os.environ['PIECES_VERBOSE'].lower() in ('1', 'true', 'yes', 'on')
+        
+        # Auto-enable verbose mode when screen reader is detected
+        if self._screen_reader:
+            return True
         
         return False
     
@@ -188,20 +292,58 @@ class AccessibilityConfig:
         """
         Get text-based indicators for semantic colors when color is not available.
         
+        For screen readers, uses more descriptive text indicators.
+        
         Args:
             semantic_color: Semantic color name
             
         Returns:
-            Unicode character prefix for the semantic meaning
+            Unicode character prefix or descriptive text for the semantic meaning
         """
-        if self.should_use_color and self._color_scheme != ColorScheme.MONOCHROME:
+        # Use descriptive text for screen readers
+        if self._screen_reader:
+            indicators = {
+                'success': '[SUCCESS]',
+                'error': '[ERROR]',
+                'warning': '[WARNING]',
+                'info': '[INFO]',
+                'muted': ''
+            }
+            return indicators.get(semantic_color, '')
+        
+        # Use Unicode indicators when colors are disabled (not screen reader)
+        if not self.should_use_color or self._color_scheme == ColorScheme.MONOCHROME:
+            indicators = {
+                'success': '✓',
+                'error': '✗',
+                'warning': '⚠',
+                'info': 'ℹ',
+                'muted': ''
+            }
+            return indicators.get(semantic_color, '')
+        
+        return ''
+    
+    def get_descriptive_prefix(self, semantic_color: str) -> str:
+        """
+        Get descriptive prefix for screen reader friendly output.
+        
+        Provides clear, spoken-friendly prefixes for different message types.
+        
+        Args:
+            semantic_color: Semantic color name
+            
+        Returns:
+            Descriptive text prefix for screen readers
+        """
+        if not self._screen_reader and not self._verbose:
             return ''
         
-        indicators = {
-            'success': '✓',
-            'error': '✗',
-            'warning': '⚠',
-            'info': 'ℹ',
+        descriptions = {
+            'success': 'Success: ',
+            'error': 'Error: ',
+            'warning': 'Warning: ',
+            'info': 'Information: ',
             'muted': ''
         }
-        return indicators.get(semantic_color, '')
+        return descriptions.get(semantic_color, '')

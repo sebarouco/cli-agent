@@ -225,6 +225,62 @@ When reduced motion is enabled:
 - Dynamic content changes are immediate without transitions
 - System reduced motion preferences are automatically detected (Windows, macOS, Linux)
 
+### Cognitive Accessibility
+
+The CLI provides cognitive accessibility features to help users process information more easily and understand complex technical messages.
+
+#### Simplified Output Mode
+
+Simplified output reduces complexity and makes information easier to process.
+
+```bash
+# Enable simplified output
+export PIECES_SIMPLIFIED_OUTPUT=1
+pieces list
+```
+
+When simplified output is enabled:
+- Large lists are truncated to reduce cognitive load
+- Progress information uses descriptive terms (e.g., "about halfway done" instead of "50%")
+- Debug information and stack traces are removed from error messages
+- Technical details are minimized
+
+Simplified output is automatically enabled when screen reader mode is detected.
+
+#### Clear Language Mode
+
+Clear language mode uses simpler words and provides more context to help users understand technical information.
+
+```bash
+# Enable clear language
+export PIECES_CLEAR_LANGUAGE=1
+pieces list
+```
+
+When clear language is enabled:
+- Technical jargon is replaced with everyday language (e.g., "execute" → "run", "configuration" → "settings")
+- Error messages are translated into clear, actionable guidance
+- Command descriptions use simple, plain language
+- Confirmation prompts are more direct and clear
+- Context-aware help provides simple, actionable suggestions
+
+Clear language is automatically enabled when simplified output is enabled.
+
+#### Error Message Simplification
+
+The CLI automatically simplifies technical error messages into clear language:
+
+- "Connection refused" → "Cannot connect to the service. Please check if PiecesOS is running."
+- "Authentication failed" → "Could not verify your identity. Please check your login credentials."
+- "Permission denied" → "You don't have permission to do this. Please check your access rights."
+
+#### Context-Aware Help
+
+When errors occur, the CLI provides context-aware help suggestions in simple language:
+- Network errors: Suggest checking internet connection
+- Permission errors: Suggest checking login status
+- File errors: Suggest verifying file existence and access
+
 ## Contributing
 
 ### Installation

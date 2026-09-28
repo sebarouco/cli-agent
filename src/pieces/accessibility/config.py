@@ -8,6 +8,7 @@ Handles detection of user accessibility preferences including:
 - Screen reader mode detection
 - Verbose output mode for accessibility
 - Keyboard navigation preferences
+- Cognitive accessibility preferences
 """
 
 import os
@@ -43,6 +44,8 @@ class AccessibilityConfig:
         self._verbose = self._check_verbose_mode()
         self._keyboard_navigation = self._check_keyboard_navigation()
         self._reduced_motion = self._check_reduced_motion()
+        self._simplified_output = self._check_simplified_output()
+        self._clear_language = self._check_clear_language()
         
     @property
     def color_scheme(self) -> ColorScheme:
@@ -83,6 +86,16 @@ class AccessibilityConfig:
     def reduced_motion(self) -> bool:
         """Check if reduced motion preference is enabled."""
         return self._reduced_motion
+    
+    @property
+    def simplified_output(self) -> bool:
+        """Check if simplified output mode is enabled."""
+        return self._simplified_output
+    
+    @property
+    def clear_language(self) -> bool:
+        """Check if clear language mode is enabled."""
+        return self._clear_language
     
     def _detect_color_scheme(self) -> ColorScheme:
         """
@@ -349,6 +362,38 @@ class AccessibilityConfig:
                     return True
             except (OSError, subprocess.TimeoutExpired, FileNotFoundError):
                 pass
+        
+        return False
+    
+    def _check_simplified_output(self) -> bool:
+        """
+        Check if simplified output mode should be enabled.
+        
+        Simplified output reduces complexity and makes information easier to process.
+        """
+        # Check explicit environment variable
+        if 'PIECES_SIMPLIFIED_OUTPUT' in os.environ:
+            return os.environ['PIECES_SIMPLIFIED_OUTPUT'].lower() in ('1', 'true', 'yes', 'on')
+        
+        # Auto-enable with screen reader or verbose mode
+        if self._screen_reader or self._verbose:
+            return True
+        
+        return False
+    
+    def _check_clear_language(self) -> bool:
+        """
+        Check if clear language mode should be enabled.
+        
+        Clear language mode uses simpler words and provides more context.
+        """
+        # Check explicit environment variable
+        if 'PIECES_CLEAR_LANGUAGE' in os.environ:
+            return os.environ['PIECES_CLEAR_LANGUAGE'].lower() in ('1', 'true', 'yes', 'on')
+        
+        # Auto-enable with simplified output
+        if self._simplified_output:
+            return True
         
         return False
     

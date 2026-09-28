@@ -179,6 +179,52 @@ The CLI provides specialized output methods for screen readers:
 - **Progress Information**: Spoken percentages and descriptive progress
 - **List Display**: Item-by-item announcement with numbering
 
+### Keyboard Navigation
+
+The CLI provides enhanced keyboard navigation features for users who prefer keyboard-only interaction or require keyboard accessibility.
+
+#### Keyboard Navigation Mode
+
+Keyboard navigation mode can be enabled via environment variable or is automatically enabled when screen reader mode is detected.
+
+```bash
+# Manually enable keyboard navigation
+export PIECES_KEYBOARD_NAVIGATION=1
+pieces list
+```
+
+#### Keyboard Navigation Features
+
+When keyboard navigation is enabled, the CLI provides:
+- **Keyboard Shortcuts**: Quick access to common actions
+- **Numbered Menus**: Easy selection using number keys (1-9, then a-z)
+- **Shortcut Hints**: Visual indicators for keyboard commands
+- **Menu Navigation**: Keyboard-friendly menu layouts
+- **Focus Management**: Clear focus indicators for interactive elements
+
+#### Default Keyboard Shortcuts
+
+The CLI includes default keyboard shortcuts:
+- `q` - Quit/Exit
+- `?` - Show help
+- `h` - Go to home
+
+#### Reduced Motion
+
+For users who prefer reduced motion or have vestibular disorders, the CLI supports reduced motion mode.
+
+```bash
+# Enable reduced motion
+export PIECES_REDUCED_MOTION=1
+pieces list
+```
+
+When reduced motion is enabled:
+- Animations and transitions are disabled
+- Progress bars use simple text format instead of visual bars
+- Dynamic content changes are immediate without transitions
+- System reduced motion preferences are automatically detected (Windows, macOS, Linux)
+
 ## Contributing
 
 ### Installation

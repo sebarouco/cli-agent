@@ -7,9 +7,11 @@ This module provides accessibility features including:
 - Screen reader friendly output
 - High contrast mode support
 - Verbose/descriptive output modes
+- Keyboard navigation helpers
 """
 
 from pieces.accessibility.config import AccessibilityConfig
 from pieces.accessibility.console import AccessibleConsole
+from pieces.accessibility.navigation import KeyboardNavigation, KeyboardShortcut
 
-__all__ = ['AccessibilityConfig', 'AccessibleConsole']
+__all__ = ['AccessibilityConfig', 'AccessibleConsole', 'KeyboardNavigation', 'KeyboardShortcut']

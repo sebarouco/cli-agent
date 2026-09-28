@@ -7,6 +7,7 @@ Handles detection of user accessibility preferences including:
 - High contrast mode detection
 - Screen reader mode detection
 - Verbose output mode for accessibility
+- Keyboard navigation preferences
 """
 
 import os
@@ -40,6 +41,8 @@ class AccessibilityConfig:
         self._high_contrast = self._check_high_contrast()
         self._screen_reader = self._check_screen_reader()
         self._verbose = self._check_verbose_mode()
+        self._keyboard_navigation = self._check_keyboard_navigation()
+        self._reduced_motion = self._check_reduced_motion()
         
     @property
     def color_scheme(self) -> ColorScheme:
@@ -70,6 +73,16 @@ class AccessibilityConfig:
     def verbose(self) -> bool:
         """Check if verbose mode is enabled for accessibility."""
         return self._verbose
+    
+    @property
+    def keyboard_navigation(self) -> bool:
+        """Check if keyboard navigation mode is enabled."""
+        return self._keyboard_navigation
+    
+    @property
+    def reduced_motion(self) -> bool:
+        """Check if reduced motion preference is enabled."""
+        return self._reduced_motion
     
     def _detect_color_scheme(self) -> ColorScheme:
         """
@@ -220,6 +233,122 @@ class AccessibilityConfig:
         # Auto-enable verbose mode when screen reader is detected
         if self._screen_reader:
             return True
+        
+        return False
+    
+    def _check_keyboard_navigation(self) -> bool:
+        """
+        Check if keyboard navigation mode should be enabled.
+        
+        Detects keyboard navigation preferences through:
+        1. PIECES_KEYBOARD_NAVIGATION environment variable
+        2. System keyboard navigation settings
+        """
+        # Check explicit environment variable
+        if 'PIECES_KEYBOARD_NAVIGATION' in os.environ:
+            return os.environ['PIECES_KEYBOARD_NAVIGATION'].lower() in ('1', 'true', 'yes', 'on')
+        
+        # Auto-enable when screen reader is active (screen reader users typically use keyboard)
+        if self._screen_reader:
+            return True
+        
+        # Check system keyboard navigation settings
+        if sys.platform == 'win32':
+            try:
+                import winreg
+                # Check Windows keyboard navigation settings
+                key = winreg.OpenKey(
+                    winreg.HKEY_CURRENT_USER,
+                    r'Control Panel\Accessibility\Keyboard Preference'
+                )
+                try:
+                    value = winreg.QueryValueEx(key, 'On')[0]
+                    if value:
+                        return True
+                except OSError:
+                    pass
+            except (OSError, ImportError):
+                pass
+        elif sys.platform == 'darwin':
+            # Check macOS keyboard navigation settings
+            try:
+                import subprocess
+                result = subprocess.run(
+                    ['defaults', 'read', 'com.apple.universalaccess', 'keyboardFullAccess'],
+                    capture_output=True, text=True, timeout=1
+                )
+                if result.stdout.strip() == '1':
+                    return True
+            except (OSError, subprocess.TimeoutExpired, FileNotFoundError):
+                pass
+        elif sys.platform.startswith('linux'):
+            # Check Linux accessibility settings
+            try:
+                import subprocess
+                # Check for assistive technologies
+                result = subprocess.run(
+                    ['gsettings', 'get', 'org.gnome.desktop.a11y.applications', 'screen-reader-enabled'],
+                    capture_output=True, text=True, timeout=1
+                )
+                if 'true' in result.stdout.lower():
+                    return True
+            except (OSError, subprocess.TimeoutExpired, FileNotFoundError):
+                pass
+        
+        return False
+    
+    def _check_reduced_motion(self) -> bool:
+        """
+        Check if reduced motion preference is enabled.
+        
+        Reduces animations and transitions for users who prefer reduced motion.
+        """
+        # Check explicit environment variable
+        if 'PIECES_REDUCED_MOTION' in os.environ:
+            return os.environ['PIECES_REDUCED_MOTION'].lower() in ('1', 'true', 'yes', 'on')
+        
+        # Check system reduced motion settings
+        if sys.platform == 'win32':
+            try:
+                import winreg
+                # Check Windows reduced motion settings
+                key = winreg.OpenKey(
+                    winreg.HKEY_CURRENT_USER,
+                    r'Control Panel\Accessibility\VisualEffects'
+                )
+                try:
+                    value = winreg.QueryValueEx(key, 'VisualEffects')[0]
+                    # 0 = Let Windows decide, 1 = Adjust for best performance, 2 = Custom
+                    if value == 1:
+                        return True
+                except OSError:
+                    pass
+            except (OSError, ImportError):
+                pass
+        elif sys.platform == 'darwin':
+            # Check macOS reduced motion settings
+            try:
+                import subprocess
+                result = subprocess.run(
+                    ['defaults', 'read', 'com.apple.universalaccess', 'reduceMotion'],
+                    capture_output=True, text=True, timeout=1
+                )
+                if result.stdout.strip() == '1':
+                    return True
+            except (OSError, subprocess.TimeoutExpired, FileNotFoundError):
+                pass
+        elif sys.platform.startswith('linux'):
+            # Check Linux reduced motion settings
+            try:
+                import subprocess
+                result = subprocess.run(
+                    ['gsettings', 'get', 'org.gnome.desktop.interface', 'enable-animations'],
+                    capture_output=True, text=True, timeout=1
+                )
+                if 'false' in result.stdout.lower():
+                    return True
+            except (OSError, subprocess.TimeoutExpired, FileNotFoundError):
+                pass
         
         return False
     

@@ -88,6 +88,53 @@ After setup, restart your terminal or source your configuration file. Then try t
 
 To refer to the list of all the commands currently supported in the Pieces CLI Agent, visit the [documentation](https://docs.pieces.app/extensions-plugins/cli/commands).
 
+## Accessibility
+
+The Pieces CLI supports accessibility features to ensure it's usable for everyone, including users with visual impairments and those who prefer accessible interfaces.
+
+### NO_COLOR Support
+
+The CLI respects the `NO_COLOR` environment variable as specified in the [no-color.org](https://no-color.org/) standard. When this variable is set (regardless of its value), the CLI will suppress all colored output.
+
+```bash
+# Disable colors
+export NO_COLOR=1
+pieces list
+```
+
+### Color Schemes
+
+The CLI supports multiple color schemes for different accessibility needs:
+
+- **default**: Standard color scheme
+- **high_contrast**: High contrast mode for low vision users
+- **monochrome**: No colors, uses text indicators (✓, ✗, ⚠)
+- **deuteranopia**: Red-green colorblind friendly
+- **protanopia**: Red-green colorblind friendly
+- **tritanopia**: Blue-yellow colorblind friendly
+
+```bash
+# Set color scheme
+export PIECES_COLOR_SCHEME=high_contrast
+pieces list
+```
+
+### Text Indicators
+
+When colors are disabled (via `NO_COLOR` or monochrome scheme), the CLI adds text indicators to preserve semantic meaning:
+
+- ✓ Success messages
+- ✗ Error messages
+- ⚠ Warning messages
+- ℹ Information messages
+
+### System Integration
+
+The CLI automatically detects system accessibility preferences:
+- Windows high contrast mode
+- Standard NO_COLOR environment variable
+- Custom color scheme preferences
+
 ## Contributing
 
 ### Installation
